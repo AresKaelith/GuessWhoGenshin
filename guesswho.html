@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Genshin Guess Who</title>
+
+
+<style>
+
+/* CSS GOES HERE */
+
+body {
+    background: #ffd6e5;
+    font-family: Arial;
+    text-align: center;
+}
+
+
+#grid {
+    display:grid;
+    grid-template-columns: repeat(15, 1fr);
+    gap:10px;
+    padding:20px;
+}
+
+.card {
+    background:white;
+    border-radius:15px;
+    padding:5px;
+    cursor:pointer;
+}
+
+.image-container {
+    position: relative;
+}
+
+
+.card img {
+    width:80px;
+    height:80px;
+    border-radius:50%;
+}
+
+
+.card p {
+
+    font-size:15px;
+
+    margin:8px 0 3px;
+
+    font-weight:bold;
+
+}
+
+.cross {
+
+    display:none;
+
+    position:absolute;
+
+    top:0;
+    left:0;
+
+    width:100%;
+    height:100%;
+
+    justify-content:center;
+    align-items:center;
+
+}
+
+
+.cross img {
+
+    width:75%;
+    height:75%;
+
+    object-fit:contain;
+
+}
+
+
+.eliminated .cross {
+
+    display:flex;
+
+}
+
+.cross img {
+
+    width:90%;
+    height:90%;
+
+    object-fit:contain;
+
+}
+
+.eliminated .cross {
+    display:block;
+}
+
+
+.switch {
+    position:relative;
+    display:inline-block;
+    width:60px;
+    height:34px;
+}
+
+
+.switch input {
+    opacity:0;
+    width:0;
+    height:0;
+}
+
+
+.slider {
+
+    position:absolute;
+    cursor:pointer;
+    top:0;
+    left:0;
+    right:0;
+    bottom:0;
+
+    background:#ccc;
+    border-radius:34px;
+
+    transition:0.3s;
+
+}
+
+
+.slider:before {
+
+    content:"";
+
+    position:absolute;
+
+    height:26px;
+    width:26px;
+
+    left:4px;
+    bottom:4px;
+
+    background:white;
+
+    border-radius:50%;
+
+    transition:0.3s;
+
+}
+
+
+input:checked + .slider {
+
+    background:#ff7fa8;
+
+}
+
+
+input:checked + .slider:before {
+
+    transform:translateX(26px);
+
+}
+
+
+.controls {
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:25px;
+
+    margin:20px;
+
+}
+
+
+.controls div {
+
+    display:flex;
+    align-items:center;
+    gap:10px;
+
+}
+
+
+#resetButton {
+
+    padding:10px 20px;
+
+    border:none;
+    border-radius:20px;
+
+    background:#ff7fa8;
+    color:white;
+
+    font-size:16px;
+    font-weight:bold;
+
+    cursor:pointer;
+
+}
+
+
+#resetButton:hover {
+
+    background:#ff5f91;
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<h1>Genshin Guess Who</h1>
+
+<label class="switch">
+    <input type="checkbox" id="hideButton">
+    <span class="slider"></span>
+</label>
+
+<p>Hide eliminated characters</p>
+
+
+<div id="grid"></div>
+
+
+
+<script>
+
+/* JAVASCRIPT GOES HERE */
+
+
+const characters = [
+
+    {name:"Aino", image:"Aino.png"},
+    {name:"Albedo", image:"Albedo.png"},
+    {name:"Alhaitham", image:"Alhaitham.png"},
+    {name:"Aloy", image:"Aloy.png"},
+    {name:"Amber", image:"Amber.png"},
+    {name:"Arlecchino", image:"Arlecchino.png"},
+    {name:"Ayaka", image:"Ayaka.png"},
+    {name:"Ayato", image:"Ayato.png"},
+    {name:"Baizhu", image:"Baizhu.png"},
+    {name:"Barbara", image:"Barbara.png"},
+    {name:"Beidou", image:"Beidou.png"},
+    {name:"Bennett", image:"Bennett.png"},
+    {name:"Candace", image:"Candace.png"},
+    {name:"Charlotte", image:"Charlotte.png"},
+    {name:"Chasca", image:"Chasca.png"},
+    {name:"Chevreuse", image:"Chevreuse.png"},
+    {name:"Chiori", image:"Chiori.png"},
+    {name:"Chongyun", image:"Chongyun.png"},
+    {name:"Citlali", image:"Citlali.png"},
+    {name:"Clorinde", image:"Clorinde.png"},
+    {name:"Collei", image:"Collei.png"},
+    {name:"Columbina", image:"Columbina.png"},
+    {name:"Cyno", image:"Cyno.png"},
+    {name:"Dahlia", image:"Dahlia.png"},
+    {name:"Dehya", image:"Dehya.png"},
+    {name:"Diluc", image:"Diluc.png"},
+    {name:"Diona", image:"Diona.png"},
+    {name:"Dori", image:"Dori.png"},
+    {name:"Durin", image:"Durin.png"},
+    {name:"Emilie", image:"Emilie.png"},
+    {name:"Escoffier", image:"Escoffier.png"},
+    {name:"Eula", image:"Eula.png"},
+    {name:"Faruzan", image:"Faruzan.png"},
+    {name:"Fischl", image:"Fischl.png"},
+    {name:"Flins", image:"Flins.png"},
+    {name:"Freminet", image:"Freminet.png"},
+    {name:"Furina", image:"Furina.png"},
+    {name:"Gaming", image:"Gaming.png"},
+    {name:"Ganyu", image:"Ganyu.png"},
+    {name:"Gorou", image:"Gorou.png"},
+    {name:"Heizou", image:"Heizou.png"},
+    {name:"Hu Tao", image:"Hu Tao.png"},
+    {name:"Iansan", image:"Iansan.png"},
+    {name:"Ifa", image:"Ifa.png"},
+    {name:"Illuga", image:"Illuga.png"},
+    {name:"Ineffa", image:"Ineffa.png"},
+    {name:"Itto", image:"Itto.png"},
+    {name:"Jahoda", image:"Jahoda.png"},
+    {name:"Jean", image:"Jean.png"},
+    {name:"Kachina", image:"Kachina.png"},
+    {name:"Kaeya", image:"Kaeya.png"},
+    {name:"Kaveh", image:"Kaveh.png"},
+    {name:"Kazuha", image:"Kazuha.png"},
+    {name:"Keqing", image:"Keqing.png"},
+    {name:"Kinich", image:"Kinich.png"},
+    {name:"Kirara", image:"Kirara.png"},
+    {name:"Klee", image:"Klee.png"},
+    {name:"Kokomi", image:"Kokomi.png"},
+    {name:"Lan Yan", image:"Lan Yan.png"},
+    {name:"Lauma", image:"Lauma.png"},
+    {name:"Layla", image:"Layla.png"},
+    {name:"Linnea", image:"Linnea.png"},
+    {name:"Lisa", image:"Lisa.png"},
+    {name:"Lohen", image:"Lohen.png"},
+    {name:"Lynette", image:"Lynette.png"},
+    {name:"Lyney", image:"Lyney.png"},
+    {name:"Mavuika", image:"Mavuika.png"},
+    {name:"Mika", image:"Mika.png"},
+    {name:"Mizuki", image:"Mizuki.png"},
+    {name:"Mona", image:"Mona.png"},
+    {name:"Mualani", image:"Mualani.png"},
+    {name:"Nahida", image:"Nahida.png"},
+    {name:"Navia", image:"Navia.png"},
+    {name:"Nefer", image:"Nefer.png"},
+    {name:"Neuvillette", image:"Neuvillette.png"},
+    {name:"Nicole", image:"Nicole.png"},
+    {name:"Nilou", image:"Nilou.png"},
+    {name:"Ningguang", image:"Ningguang.png"},
+    {name:"Noelle", image:"Noelle.png"},
+    {name:"Ororon", image:"Ororon.png"},
+    {name:"Prune", image:"Prune.png"},
+    {name:"Qiqi", image:"Qiqi.png"},
+    {name:"Raiden", image:"Raiden.png"},
+    {name:"Razor", image:"Razor.png"},
+    {name:"Rosaria", image:"Rosaria.png"},
+    {name:"Sandrone", image:"Sandrone.png"},
+    {name:"Sara", image:"Sara.png"},
+    {name:"Sayu", image:"Sayu.png"},
+    {name:"Sethos", image:"Sethos.png"},
+    {name:"Shenhe", image:"Shenhe.png"},
+    {name:"Shinobu", image:"Shinobu.png"},
+    {name:"Sigewinne", image:"Sigewinne.png"},
+    {name:"Skirk", image:"Skirk.png"},
+    {name:"Sucrose", image:"Sucrose.png"},
+    {name:"Tartaglia", image:"Tartaglia.png"},
+    {name:"Thoma", image:"Thoma.png"},
+    {name:"Tighnari", image:"Tighnari.png"},
+    {name:"Varesa", image:"Varesa.png"},
+    {name:"Varka", image:"Varka.png"},
+    {name:"Venti", image:"Venti.png"},
+    {name:"Wanderer", image:"Wanderer.png"},
+    {name:"Wriothesley", image:"Wriothesley.png"},
+    {name:"Xiangling", image:"Xiangling.png"},
+    {name:"Xianyun", image:"Xianyun.png"},
+    {name:"Xiao", image:"Xiao.png"},
+    {name:"Xilonen", image:"Xilonen.png"},
+    {name:"Xingqiu", image:"Xingqiu.png"},
+    {name:"Xinyan", image:"Xinyan.png"},
+    {name:"Yae Miko", image:"Yae Miko.png"},
+    {name:"Yanfei", image:"Yanfei.png"},
+    {name:"Yaoyao", image:"Yaoyao.png"},
+    {name:"Yelan", image:"Yelan.png"},
+    {name:"Yoimiya", image:"Yoimiya.png"},
+    {name:"Yun Jin", image:"Yun Jin.png"},
+    {name:"Zhongli", image:"Zhongli.png"}
+
+];
+
+
+const grid = document.getElementById("grid");
+
+
+characters.forEach(character => {
+
+
+    let card = document.createElement("div");
+
+    card.className = "card";
+
+
+    card.innerHTML = `
+
+    <div class="image-container">
+
+        <img src="images/${character.image}">
+
+        <div class="cross">
+    		<img src="cross.png">
+	</div>
+
+    </div>
+
+
+    <p>${character.name}</p>
+
+    `;
+
+
+    card.onclick = function(){
+
+    card.classList.toggle("eliminated");
+
+
+    // if hide toggle is already on, update visibility immediately
+    if(document.getElementById("hideButton").checked){
+
+        if(card.classList.contains("eliminated")){
+            card.style.display = "none";
+        }
+
+    }
+
+};
+
+
+    grid.appendChild(card);
+
+
+});
+
+
+
+document.getElementById("hideButton").onchange = function(){
+
+    let hidden = this.checked;
+
+
+    document.querySelectorAll(".card").forEach(card => {
+
+
+        if(card.classList.contains("eliminated")){
+
+            card.style.display = hidden ? "none" : "block";
+
+        }
+
+
+    });
+
+};
+
+</script>
+
+
+</body>
+
+</html>
